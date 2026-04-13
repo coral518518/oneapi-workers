@@ -2,8 +2,7 @@
   "name": "new-ai-proxy",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
-    "cf-typegen": "wrangler types --include-env=false"
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "chanfana": "^2.8.3",
