@@ -2,7 +2,7 @@
 
 一个基于 Cloudflare Workers 构建的高性能、Serverless 的大模型 API 转发与代理分发系统。它不仅支持多供应商接入与完善的 Token 管控，还提供企业级的高可用架构设计（如多路负载均衡、自动重试和模型降级无缝切换）。本项目完全部署于边缘网络，并且自带功能完善的可视化管理后台。
 
-[![Deploy to Cloudflare Workers](https://img.shields.io/badge/Deploy%20to-Workers-orange)](https://dash.cloudflare.com/workers)
+[![Deploy to Cloudflare Workers](https://img.shields.io/badge/Deploy%20to-Workers-orange)](https://deploy.workers.cloudflare.com/?url=https://github.com/coral518518/oneapi-workers)
 
 ## 🌟 通用核心功能介绍 (General Features)
 
