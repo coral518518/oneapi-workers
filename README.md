@@ -2,6 +2,8 @@
 
 一个基于 Cloudflare Workers 构建的高性能、Serverless 的大模型 API 转发与代理分发系统。它不仅支持多供应商接入与完善的 Token 管控，还提供企业级的高可用架构设计（如多路负载均衡、自动重试和模型降级无缝切换）。本项目完全部署于边缘网络，并且自带功能完善的可视化管理后台。
 
+[![Deploy to Cloudflare Workers](https://img.shields.io/badge/Deploy%20to-Workers-orange)](https://dash.cloudflare.com/workers)
+
 ## 🌟 通用核心功能介绍 (General Features)
 
 本项目通过将多个不同供应商提供的大语言模型（LLM）API 进行封装和转发，对外提供统一、标准的 OpenAI 接口格式调用（如 `/v1/chat/completions`、`/v1/messages` 等）。
