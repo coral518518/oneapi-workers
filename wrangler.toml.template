@@ -1,0 +1,17 @@
+name = "new-one-api"
+main = "src/index.ts"
+compatibility_date = "2025-04-28"
+
+[vars]
+ADMIN_TOKEN = "your-admin-token"
+
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/v1/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "your-database-name"
+database_id = "your-database-id"
