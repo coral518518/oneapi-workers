@@ -78,13 +78,50 @@ const fetchChannelsForToken = async (
 }
 
 /**
- * 判断 HTTP 状态码是否触发故障切换
+ * 判断响应是否触发故障切换
  * - 5xx 服务端错误 -> 切换
  * - 429 限流      -> 切换
+ * - 200 且报文为空，或非流式响应中 model 字段为空/不存在 -> 切换
  * - 其他 4xx/2xx  -> 不切换（视为正常业务响应）
  */
-const shouldFailover = (status: number): boolean => {
-    return status === 429 || (status >= 500 && status < 600);
+const shouldFailover = async (response: Response): Promise<boolean> => {
+    const status = response.status;
+    if (status === 429 || (status >= 500 && status < 600)) {
+        return true;
+    }
+
+    if (status === 200) {
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("text/event-stream")) {
+            return false; // 流式响应暂不读取 body 以免破坏流
+        }
+
+        try {
+            const clonedResponse = response.clone();
+            const text = await clonedResponse.text();
+
+            if (!text || text.trim() === "") {
+                return true; // 没有报文返回
+            }
+
+            try {
+                const data = JSON.parse(text);
+                if (!data.model || typeof data.model !== 'string' || data.model.trim() === '') {
+                    return true; // 返回 200 但是没有 model 字段或者 model 为空
+                }
+            } catch (e) {
+                // 非 JSON 格式的报文（如 HTML 错误页），触发切换
+                return true;
+            }
+        } catch (e) {
+            return true; // 读取报文异常触发切换
+        }
+    } else {
+        return true;
+    }
+
+    return false;
 }
 
 type ParsedChannel = {
@@ -239,7 +276,7 @@ const proxyWithFailover = async (
                     }
                 );
 
-                if (!shouldFailover(response.status)) {
+                if (!(await shouldFailover(response))) {
                     // 成功或不可重试错误（4xx 非 429）
                     if (currentModel !== originalModel) {
                         console.log(`[Failover] OK with fallback model="${currentModel}" channel="${selected.key}"`);

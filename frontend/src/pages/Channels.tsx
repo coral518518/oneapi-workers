@@ -426,202 +426,202 @@ export function Channels() {
         </div>
 
         <div className="space-y-6">
-        {/* Channel Key */}
-        <Card>
-          <CardContent className="p-5">
-            <h3 className="font-medium mb-4">频道标识</h3>
-            <p className="text-sm text-muted-foreground mb-3">用于内部识别的唯一标识</p>
-            <Input
-              value={channelKey}
-              onChange={(e) => setChannelKey(e.target.value)}
-              placeholder="例如：azure-gpt4-east"
-              disabled={!!editingKey}
-              className="font-mono text-sm"
-            />
-          </CardContent>
-        </Card>
-
-        {editMode === 'form' ? (
-          <>
-            {/* Basic Info */}
-            <Card>
-              <CardContent className="p-5">
-                <h3 className="font-medium mb-4">基本信息</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm">频道名称 <span className="text-destructive">*</span></Label>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="例如：Azure GPT-4 东部"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">频道类型 <span className="text-destructive">*</span></Label>
-                    <Select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                    >
-                      {channelTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Connection */}
-            <Card>
-              <CardContent className="p-5">
-                <h3 className="font-medium mb-4">连接配置</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      API 端点 <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      value={formData.endpoint}
-                      onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
-                      placeholder="https://your-resource.openai.azure.com/"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">API 密钥 <span className="text-destructive">*</span></Label>
-                      <Input
-                        type="password"
-                        value={formData.api_key}
-                        onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                        placeholder="sk-..."
-                      />
-                    </div>
-                    {(formData.type === 'azure-openai' || formData.type === 'claude' || formData.type === 'azure-openai-responses') && (
-                      <div className="space-y-2">
-                        <Label className="text-sm">API 版本</Label>
-                        <Input
-                          value={formData.api_version || ''}
-                          onChange={(e) => setFormData({ ...formData, api_version: e.target.value })}
-                          placeholder="2024-02-01"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-1">
-                      故障切换优先级
-                      <span className="text-xs text-muted-foreground ml-1">(越大越优先，默认 0)</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={formData.priority ?? 0}
-                      onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
-                      placeholder="0"
-                      className="w-32"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Model Mappings */}
-            <Card>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-medium flex items-center gap-2">
-                      <Cpu className="h-4 w-4 text-muted-foreground" />
-                      模型映射
-                    </h3>
-                    <p className="text-sm text-muted-foreground">将请求模型名映射到实际部署名</p>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={addMapperRow}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    添加
-                  </Button>
-                </div>
-
-                {mapperRows.length === 0 ? (
-                  <button
-                    type="button"
-                    onClick={addMapperRow}
-                    className="w-full py-8 border-2 border-dashed rounded-xl text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2"
-                  >
-                    <Plus className="h-5 w-5" />
-                    添加模型映射
-                  </button>
-                ) : (
-                  <div className="space-y-2">
-                    {mapperRows.map((row, index) => (
-                      <div key={index} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                        <Input
-                          value={row.request}
-                          onChange={(e) => updateMapperRow(index, 'request', e.target.value)}
-                          placeholder="gpt-4"
-                          className="flex-1 bg-background text-sm"
-                        />
-                        <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <Input
-                          value={row.deployment}
-                          onChange={(e) => updateMapperRow(index, 'deployment', e.target.value)}
-                          placeholder="gpt-4-0613"
-                          className="flex-1 bg-background text-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-destructive hover:text-destructive flex-shrink-0"
-                          onClick={() => removeMapperRow(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        ) : (
+          {/* Channel Key */}
           <Card>
             <CardContent className="p-5">
-              <h3 className="font-medium mb-4">JSON 配置</h3>
-              <Textarea
-                value={jsonValue}
-                onChange={(e) => setJsonValue(e.target.value)}
-                rows={18}
+              <h3 className="font-medium mb-4">频道标识</h3>
+              <p className="text-sm text-muted-foreground mb-3">用于内部识别的唯一标识</p>
+              <Input
+                value={channelKey}
+                onChange={(e) => setChannelKey(e.target.value)}
+                placeholder="例如：azure-gpt4-east"
+                disabled={!!editingKey}
                 className="font-mono text-sm"
-                placeholder='{"name": "Azure OpenAI", "type": "azure-openai", ...}'
               />
             </CardContent>
           </Card>
-        )}
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Button variant="outline" onClick={() => setView('list')}>
-            取消
-          </Button>
-          <Button onClick={handleSave} disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                保存中...
-              </>
-            ) : (
-              <>
-                <Check className="h-4 w-4 mr-2" />
-                保存频道
-              </>
-            )}
-          </Button>
-        </div>
+          {editMode === 'form' ? (
+            <>
+              {/* Basic Info */}
+              <Card>
+                <CardContent className="p-5">
+                  <h3 className="font-medium mb-4">基本信息</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm">频道名称 <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="例如：Azure GPT-5.4 东部"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">频道类型 <span className="text-destructive">*</span></Label>
+                      <Select
+                        value={formData.type}
+                        onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                      >
+                        {channelTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Connection */}
+              <Card>
+                <CardContent className="p-5">
+                  <h3 className="font-medium mb-4">连接配置</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        API 端点 <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        value={formData.endpoint}
+                        onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
+                        placeholder="https://your-resource.openai.azure.com/"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm">API 密钥 <span className="text-destructive">*</span></Label>
+                        <Input
+                          type="password"
+                          value={formData.api_key}
+                          onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                          placeholder="sk-..."
+                        />
+                      </div>
+                      {(formData.type === 'azure-openai' || formData.type === 'claude' || formData.type === 'azure-openai-responses') && (
+                        <div className="space-y-2">
+                          <Label className="text-sm">API 版本</Label>
+                          <Input
+                            value={formData.api_version || ''}
+                            onChange={(e) => setFormData({ ...formData, api_version: e.target.value })}
+                            placeholder="2024-02-01"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-1">
+                        故障切换优先级
+                        <span className="text-xs text-muted-foreground ml-1">(越大越优先，默认 0)</span>
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={formData.priority ?? 0}
+                        onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                        placeholder="0"
+                        className="w-32"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Model Mappings */}
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-medium flex items-center gap-2">
+                        <Cpu className="h-4 w-4 text-muted-foreground" />
+                        模型映射
+                      </h3>
+                      <p className="text-sm text-muted-foreground">将请求模型名映射到实际部署名</p>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={addMapperRow}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      添加
+                    </Button>
+                  </div>
+
+                  {mapperRows.length === 0 ? (
+                    <button
+                      type="button"
+                      onClick={addMapperRow}
+                      className="w-full py-8 border-2 border-dashed rounded-xl text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2"
+                    >
+                      <Plus className="h-5 w-5" />
+                      添加模型映射
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      {mapperRows.map((row, index) => (
+                        <div key={index} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                          <Input
+                            value={row.request}
+                            onChange={(e) => updateMapperRow(index, 'request', e.target.value)}
+                            placeholder="gpt-5.4"
+                            className="flex-1 bg-background text-sm"
+                          />
+                          <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <Input
+                            value={row.deployment}
+                            onChange={(e) => updateMapperRow(index, 'deployment', e.target.value)}
+                            placeholder="gpt-5.4"
+                            className="flex-1 bg-background text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-destructive hover:text-destructive flex-shrink-0"
+                            onClick={() => removeMapperRow(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-medium mb-4">JSON 配置</h3>
+                <Textarea
+                  value={jsonValue}
+                  onChange={(e) => setJsonValue(e.target.value)}
+                  rows={18}
+                  className="font-mono text-sm"
+                  placeholder='{"name": "Azure OpenAI", "type": "azure-openai", ...}'
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setView('list')}>
+              取消
+            </Button>
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  保存中...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  保存频道
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

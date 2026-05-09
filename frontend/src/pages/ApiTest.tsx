@@ -13,7 +13,7 @@ import { PageContainer } from '@/components/ui/page-container'
 
 const requestTemplates: Record<string, any> = {
   '/v1/chat/completions': {
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-5.4',
     messages: [
       {
         role: 'user',
@@ -34,11 +34,11 @@ const requestTemplates: Record<string, any> = {
     ],
   },
   '/v1/responses': {
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.4',
     input: 'Hello, Responses API!',
   },
   '/v1/completions': {
-    model: 'gpt-3.5-turbo-instruct',
+    model: 'gpt-5.4',
     prompt: 'Once upon a time',
     max_tokens: 100,
     temperature: 0.7,
@@ -148,7 +148,7 @@ export function ApiTest() {
                 onChange={(e) => setRequestBody(e.target.value)}
                 rows={12}
                 className="font-mono text-sm"
-                placeholder='{"model": "gpt-3.5-turbo", "messages": [...]}'
+                placeholder='{"model": "gpt-5.4", "messages": [...]}'
               />
               <p className="text-sm text-muted-foreground">直接编辑 JSON 格式的请求体</p>
             </div>

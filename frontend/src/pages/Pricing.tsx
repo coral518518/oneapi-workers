@@ -140,7 +140,7 @@ export function Pricing() {
 
   const updateRow = (index: number, field: 'model' | 'input' | 'output' | 'cache', value: string | number) => {
     const newRows = [...pricingRows]
-    ;(newRows[index] as any)[field] = value
+      ; (newRows[index] as any)[field] = value
     setPricingRows(newRows)
   }
 
@@ -297,7 +297,7 @@ export function Pricing() {
               onChange={(e) => setJsonValue(e.target.value)}
               rows={20}
               className="font-mono text-sm"
-              placeholder='{"gpt-4": {"input": 30, "output": 60, "cache": 3}, ...}'
+              placeholder='{"gpt-5.4": {"input": 30, "output": 60, "cache": 3}, ...}'
             />
             <p className="text-xs text-muted-foreground">
               格式：模型名称 → {"{"} input: 输入倍率, output: 输出倍率, cache: 缓存倍率 {"}"}
