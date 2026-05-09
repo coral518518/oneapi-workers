@@ -99,23 +99,69 @@ const shouldFailover = async (response: Response): Promise<boolean> => {
 
         try {
             const clonedResponse = response.clone();
-            const text = await clonedResponse.text();
+            const body = clonedResponse.body;
+            if (!body) return true;
+
+            const reader = body.getReader();
+            let text = "";
+            const maxLength = 32768; // 优化：最多读取前 32KB，避免大响应占用过多内存或解析极其缓慢
+            let isDone = false;
+
+            try {
+                const decoder = new TextDecoder();
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        isDone = true;
+                        text += decoder.decode(); // flush
+                        break;
+                    }
+                    if (value) {
+                        text += decoder.decode(value, { stream: true });
+                        if (text.length >= maxLength) {
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {
+                return true; // 读取流异常触发切换
+            } finally {
+                // 释放并取消 cloned reader，停止缓冲剩余报文，大幅节省内存
+                await reader.cancel();
+            }
 
             if (!text || text.trim() === "") {
                 return true; // 没有报文返回
             }
 
-            try {
-                const data = JSON.parse(text);
-                if (!data.model || typeof data.model !== 'string' || data.model.trim() === '') {
-                    return true; // 返回 200 但是没有 model 字段或者 model 为空
+            if (isDone) {
+                // 报文已完整读取且较小，直接使用标准的 JSON 解析验证
+                try {
+                    const data = JSON.parse(text);
+                    if (!data.model || typeof data.model !== 'string' || data.model.trim() === '') {
+                        return true; // 返回 200 但是没有 model 字段或者 model 为空
+                    }
+                } catch (e) {
+                    // 非 JSON 格式的报文（如 HTML 错误页），触发切换
+                    return true;
                 }
-            } catch (e) {
-                // 非 JSON 格式的报文（如 HTML 错误页），触发切换
-                return true;
+            } else {
+                // 报文很大被截断，通常只有正常的超大响应（如长篇生成）才会超过 32KB。
+                const trimmed = text.trim();
+                if (!trimmed.startsWith('{')) {
+                    return true; // 不是标准 JSON 对象，可能是超长 HTML 错误页
+                }
+
+                // 尝试提取 model 字段
+                const modelMatch = text.match(/"model"\s*:\s*"([^"]+)"/);
+                if (modelMatch && modelMatch[1].trim() !== '') {
+                    // 找到有效的 model 字段，说明是正常响应，无需切换
+                } else {
+                    return true;
+                }
             }
         } catch (e) {
-            return true; // 读取报文异常触发切换
+            return true; // 其他异常触发切换
         }
     } else {
         return true;
