@@ -6,6 +6,8 @@ type CloudflareBindings = {
     DB: D1Database;
     ASSETS: Fetcher;
     ADMIN_TOKEN: string;
+    NVIDIA_MODELS_API_URL?: string;
+    NVIDIA_SYNC_DIRECT_MODELS?: string;
 }
 
 type HonoCustomType = {

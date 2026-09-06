@@ -3,6 +3,7 @@ import { contentJson, OpenAPIRoute } from 'chanfana';
 import { z } from 'zod';
 
 import { CommonErrorResponse, CommonSuccessfulResponse } from "../model";
+import { syncNvidiaModels } from "../cron/sync_nvidia";
 
 // 获取所有 Channel 配置
 export class ChannelGetEndpoint extends OpenAPIRoute {
@@ -122,3 +123,52 @@ export class ChannelDeleteEndpoint extends OpenAPIRoute {
         } as CommonResponse;
     }
 }
+
+// 手动触发同步 NVIDIA 免费模型
+export class ChannelSyncNvidiaEndpoint extends OpenAPIRoute {
+    schema = {
+        tags: ['Admin API'],
+        summary: 'Sync NVIDIA free models and update deployment mapper',
+        request: {
+            body: {
+                content: {
+                    'application/json': {
+                        schema: z.object({
+                            api_url: z.string().optional().describe('Custom API URL for free models'),
+                        }).optional(),
+                    },
+                },
+            },
+        },
+        responses: {
+            ...CommonSuccessfulResponse(z.object({
+                success: z.boolean(),
+                message: z.string(),
+                channelKey: z.string().optional(),
+                gpt52Model: z.string().nullable().optional(),
+                gpt51Model: z.string().nullable().optional(),
+                totalModels: z.number().optional(),
+                deploymentMapper: z.record(z.string()).optional(),
+            })),
+            ...CommonErrorResponse,
+        },
+    };
+
+    async handle(c: Context<HonoCustomType>) {
+        let apiUrl: string | undefined;
+        try {
+            const body = await c.req.json<{ api_url?: string }>();
+            apiUrl = body?.api_url;
+        } catch {
+            // body is optional
+        }
+
+        const result = await syncNvidiaModels(c.env, apiUrl);
+        return {
+            success: result.success,
+            message: result.message,
+            data: result,
+        } as CommonResponse;
+    }
+}
+

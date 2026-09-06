@@ -2,7 +2,7 @@ import { Context, Hono, Next } from "hono"
 import { fromHono } from 'chanfana';
 import { DBInitializeEndpoint } from "./db_api"
 import {
-    ChannelGetEndpoint, ChannelUpsertEndpoint, ChannelDeleteEndpoint
+    ChannelGetEndpoint, ChannelUpsertEndpoint, ChannelDeleteEndpoint, ChannelSyncNvidiaEndpoint
 } from "./channel_api"
 import {
     TokenListEndpoint, TokenUpsertEndpoint, TokenDeleteEndpoint, TokenResetUsageEndpoint
@@ -31,6 +31,7 @@ app.use('/api/admin/*', async (c, next) => {
 api.post("/api/admin/db_initialize", DBInitializeEndpoint)
 
 api.get("/api/admin/channel", ChannelGetEndpoint)
+api.post("/api/admin/channel/sync-nvidia", ChannelSyncNvidiaEndpoint)
 api.post("/api/admin/channel/:key", ChannelUpsertEndpoint)
 api.delete("/api/admin/channel/:key", ChannelDeleteEndpoint)
 

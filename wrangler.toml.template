@@ -4,6 +4,10 @@ compatibility_date = "2025-04-28"
 
 [vars]
 ADMIN_TOKEN = "your-admin-token"
+NVIDIA_MODELS_API_URL = "your-nvidia-free-models-api-url"
+
+[triggers]
+crons = ["0 0 * * *"] # 每天 08:00 (北京时间 UTC+8 即 UTC 00:00)
 
 [assets]
 directory = "./public"
