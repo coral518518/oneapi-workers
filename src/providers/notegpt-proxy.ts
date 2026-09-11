@@ -12,12 +12,11 @@ export default {
         saveUsage: (usage: Usage) => Promise<void>
     ): Promise<Response> {
         const stream = Boolean(requestBody.stream);
-        const originalModel = requestBody.model || "gemini-3.1-flash-lite";
 
-        // NoteGPT 模型名，若请求为 notegpt 或空则默认 gemini-3.1-flash-lite
-        const targetModel = (requestBody.model && requestBody.model.toLowerCase() !== "notegpt")
-            ? requestBody.model
-            : "gemini-3.1-flash-lite";
+        // 真实模型名：直接使用上层 deployment_mapper 映射后的真实部署模型名
+        const realModel = requestBody.model || "gemini-3.1-flash-lite";
+        // 返回给客户端的模型名
+        const clientModel = realModel;
 
         const promptText = buildPromptFromOpenAIMessages(requestBody.messages, requestBody.prompt);
         if (!promptText.trim()) {
@@ -51,7 +50,7 @@ export default {
                             id: chatId,
                             object: "chat.completion.chunk",
                             created,
-                            model: originalModel,
+                            model: clientModel,
                             choices: [
                                 {
                                     index: 0,
@@ -62,14 +61,14 @@ export default {
                         };
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(initialChunk)}\n\n`));
 
-                        // 2. 消费 NoteGPT SSE 流式分片并转换为 OpenAI chunk
-                        for await (const piece of defaultNoteGPTClient.chatStream(promptText, targetModel, 3)) {
+                        // 2. 消费 NoteGPT SSE 流式分片并转换为 OpenAI chunk（使用映射后的真实模型 realModel）
+                        for await (const piece of defaultNoteGPTClient.chatStream(promptText, realModel, 3)) {
                             fullReply += piece;
                             const deltaChunk = {
                                 id: chatId,
                                 object: "chat.completion.chunk",
                                 created,
-                                model: originalModel,
+                                model: clientModel,
                                 choices: [
                                     {
                                         index: 0,
@@ -94,7 +93,7 @@ export default {
                             id: chatId,
                             object: "chat.completion.chunk",
                             created,
-                            model: originalModel,
+                            model: clientModel,
                             choices: [
                                 {
                                     index: 0,
@@ -141,7 +140,7 @@ export default {
 
         // B. 非流式处理 (OpenAI JSON 规范)
         try {
-            const fullReply = await defaultNoteGPTClient.chat(promptText, targetModel, 3);
+            const fullReply = await defaultNoteGPTClient.chat(promptText, realModel, 3);
 
             const promptTokens = Math.max(1, Math.ceil(promptText.length / 3));
             const completionTokens = Math.max(1, Math.ceil(fullReply.length / 3));
@@ -155,7 +154,7 @@ export default {
                 id: chatId,
                 object: "chat.completion",
                 created,
-                model: originalModel,
+                model: clientModel,
                 choices: [
                     {
                         index: 0,

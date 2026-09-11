@@ -281,7 +281,7 @@ const proxyWithFailover = async (
         if (!proxyFetch) {
             return new Response("Channel type not supported", { status: 400 });
         }
-        const body = { ...requestBody, model: selected.mapping.deployment };
+        const body = { ...requestBody, model: selected.mapping.deployment, clientModel: originalModel };
         return proxyFetch(c, selected.config, body,
             async (usage: Usage) => {
                 try {
@@ -324,7 +324,7 @@ const proxyWithFailover = async (
                 continue;
             }
 
-            const body = { ...requestBody, model: selected.mapping.deployment };
+            const body = { ...requestBody, model: selected.mapping.deployment, clientModel: currentModel };
 
             try {
                 const response = await proxyFetch(c, selected.config, body,

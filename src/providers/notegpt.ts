@@ -192,7 +192,7 @@ export class NoteGPTClient {
      */
     async *chatStream(
         promptText: string,
-        model = "gemini-3.1-flash-lite",
+        model?: string,
         maxRetries = 3,
         signal?: AbortSignal
     ): AsyncGenerator<string, void, unknown> {
@@ -366,7 +366,7 @@ export class NoteGPTClient {
      */
     async chat(
         promptText: string,
-        model = "gemini-3.1-flash-lite",
+        model?: string,
         maxRetries = 3,
         signal?: AbortSignal
     ): Promise<string> {
