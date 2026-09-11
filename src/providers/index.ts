@@ -285,7 +285,7 @@ const proxyWithFailover = async (
         return proxyFetch(c, selected.config, body,
             async (usage: Usage) => {
                 try {
-                    await TokenUtils.processUsage(c, apiKey, body.model, selected.key, selected.config, usage);
+                    await TokenUtils.processUsage(c, apiKey, originalModel, body.model, selected.key, selected.config, usage);
                 } catch (error) {
                     console.error('Error processing usage:', error);
                 }
@@ -330,7 +330,7 @@ const proxyWithFailover = async (
                 const response = await proxyFetch(c, selected.config, body,
                     async (usage: Usage) => {
                         try {
-                            await TokenUtils.processUsage(c, apiKey, body.model, selected.key, selected.config, usage);
+                            await TokenUtils.processUsage(c, apiKey, currentModel, body.model, selected.key, selected.config, usage);
                         } catch (error) {
                             console.error('Error processing usage:', error);
                         }
@@ -403,11 +403,6 @@ class ProxyEndpoint extends OpenAPIRoute {
 
         const { tokenData, usage } = tokenInfo;
 
-        // Check if token has sufficient quota
-        if (usage >= tokenData.total_quota) {
-            return c.text("Quota exceeded", 402);
-        }
-
         // Get available channel configs based on token permissions
         const channelsResult = await fetchChannelsForToken(c, tokenData);
 
@@ -424,6 +419,14 @@ class ProxyEndpoint extends OpenAPIRoute {
         const model = requestBody.model;
         if (!model) {
             return c.text("Model is required", 400);
+        }
+
+        // Check if token has sufficient quota（仅对计费模型进行拦截；若定价管理中未配置该模型，视为免费不计费模型，跳过配额拦截）
+        if (usage >= tokenData.total_quota) {
+            const isFree = await TokenUtils.isFreeModel(c, model);
+            if (!isFree) {
+                return c.text("Quota exceeded", 402);
+            }
         }
 
         // 检查原始模型是否有任何 channel 支持（快速失败，避免不必要的配置读取）
@@ -479,10 +482,6 @@ class ResponsesProxyEndpoint extends OpenAPIRoute {
 
         const { tokenData, usage } = tokenInfo;
 
-        if (usage >= tokenData.total_quota) {
-            return c.text("Quota exceeded", 402);
-        }
-
         const channelsResult = await fetchChannelsForToken(c, tokenData);
 
         if (!channelsResult.results || channelsResult.results.length === 0) {
@@ -498,6 +497,14 @@ class ResponsesProxyEndpoint extends OpenAPIRoute {
         const model = requestBody.model;
         if (!model) {
             return c.text("Model is required", 400);
+        }
+
+        // Check if token has sufficient quota（仅对计费模型进行拦截；若定价管理中未配置该模型，视为免费不计费模型，跳过配额拦截）
+        if (usage >= tokenData.total_quota) {
+            const isFree = await TokenUtils.isFreeModel(c, model);
+            if (!isFree) {
+                return c.text("Quota exceeded", 402);
+            }
         }
 
         const allowedTypes: ChannelType[] = ["openai-responses", "azure-openai-responses"];

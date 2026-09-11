@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getJsonSetting, saveSetting } from "../utils";
 import { CONSTANTS } from "../constants";
 import { CommonErrorResponse, CommonSuccessfulResponse } from "../model";
+import { TokenUtils } from "./token_utils";
 
 // Pricing 获取配置 API
 export class PricingGetEndpoint extends OpenAPIRoute {
@@ -63,6 +64,9 @@ export class PricingUpdateEndpoint extends OpenAPIRoute {
             CONSTANTS.MODEL_PRICING_KEY,
             JSON.stringify(body)
         );
+
+        // 清除内存中的定价缓存，使新配置立即生效
+        TokenUtils.clearPricingCache();
 
         return {
             success: true,
