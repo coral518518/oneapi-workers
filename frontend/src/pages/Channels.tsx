@@ -37,6 +37,7 @@ const channelTypes = [
   { value: 'claude-to-openai', label: 'Claude → OpenAI' },
   { value: 'openai-responses', label: 'OpenAI Responses' },
   { value: 'azure-openai-responses', label: 'Azure OpenAI Responses' },
+  { value: 'notegpt', label: 'NoteGPT (Free AI)' },
 ]
 
 export function Channels() {
@@ -156,7 +157,8 @@ export function Channels() {
 
     let config: any
     if (editMode === 'form') {
-      if (!formData.name || !formData.endpoint || !formData.api_key) {
+      const isNoteGPT = formData.type === 'notegpt'
+      if (!formData.name || (!isNoteGPT && (!formData.endpoint || !formData.api_key))) {
         addToast('请填写所有必填字段', 'error')
         return
       }
@@ -168,8 +170,14 @@ export function Channels() {
         }
       })
 
-      config = { ...formData, deployment_mapper }
-      if (!formData.api_version) {
+      const currentFormData = { ...formData }
+      if (isNoteGPT) {
+        if (!currentFormData.endpoint) currentFormData.endpoint = 'https://notegpt.io'
+        if (!currentFormData.api_key) currentFormData.api_key = 'free'
+      }
+
+      config = { ...currentFormData, deployment_mapper }
+      if (!currentFormData.api_version) {
         delete config.api_version
       }
     } else {
@@ -481,22 +489,26 @@ export function Channels() {
                     <div className="space-y-2">
                       <Label className="text-sm flex items-center gap-2">
                         <Globe className="h-4 w-4 text-muted-foreground" />
-                        API 端点 <span className="text-destructive">*</span>
+                        API 端点 {formData.type !== 'notegpt' && <span className="text-destructive">*</span>}
+                        {formData.type === 'notegpt' && <span className="text-xs text-muted-foreground ml-1">(NoteGPT 免签直连，留空则默认 https://notegpt.io)</span>}
                       </Label>
                       <Input
                         value={formData.endpoint}
                         onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
-                        placeholder="https://your-resource.openai.azure.com/"
+                        placeholder={formData.type === 'notegpt' ? 'https://notegpt.io' : 'https://your-resource.openai.azure.com/'}
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-sm">API 密钥 <span className="text-destructive">*</span></Label>
+                        <Label className="text-sm">
+                          API 密钥 {formData.type !== 'notegpt' && <span className="text-destructive">*</span>}
+                          {formData.type === 'notegpt' && <span className="text-xs text-muted-foreground ml-1">(免密免签，无需填写)</span>}
+                        </Label>
                         <Input
                           type="password"
                           value={formData.api_key}
                           onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                          placeholder="sk-..."
+                          placeholder={formData.type === 'notegpt' ? '无需填写 (自动免签)' : 'sk-...'}
                         />
                       </div>
                       {(formData.type === 'azure-openai' || formData.type === 'claude' || formData.type === 'azure-openai-responses') && (

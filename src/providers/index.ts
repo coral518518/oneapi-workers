@@ -7,6 +7,7 @@ import claudeProxy from "./claude-proxy"
 import claudeToOpenaiProxy from "./claude-to-openai-proxy"
 import openaiResponsesProxy from "./openai-responses-proxy"
 import azureOpenaiResponsesProxy from "./azure-openai-responses-proxy"
+import notegptProxy from "./notegpt-proxy"
 import utils, { findDeploymentMapping } from "../utils"
 import { TokenUtils } from "../admin/token_utils"
 import { CONSTANTS } from "../constants"
@@ -29,6 +30,7 @@ const providerMap: Record<
     "claude-to-openai": claudeToOpenaiProxy.fetch,
     "openai-responses": openaiResponsesProxy.fetch,
     "azure-openai-responses": azureOpenaiResponsesProxy.fetch,
+    "notegpt": notegptProxy.fetch,
 };
 
 const getApiKeyFromHeaders = (c: Context<HonoCustomType>): string | null => {
@@ -253,6 +255,19 @@ const proxyWithFailover = async (
         return [originalModel];
     };
 
+    // 根据渠道获取对应的 Provider 实现（如果是 notegpt 渠道或名称/Key 命中 notegpt 则直接走 NoteGPT 逻辑）
+    const getProviderFetch = (channel: AvailableChannel) => {
+        const type = channel.config.type || "";
+        if (
+            type === "notegpt" ||
+            channel.config.name?.toLowerCase().includes("notegpt") ||
+            channel.key.toLowerCase().includes("notegpt")
+        ) {
+            return notegptProxy.fetch;
+        }
+        return providerMap[type];
+    };
+
     // ------------------------------------------------------------------
     // 故障切换关闭：保持原有行为（随机选一个 channel，不重试，不降级）
     // ------------------------------------------------------------------
@@ -262,7 +277,7 @@ const proxyWithFailover = async (
             return new Response(`No channels available for model: ${originalModel}`, { status: 400 });
         }
         const selected = channels[Math.floor(Math.random() * channels.length)];
-        const proxyFetch = providerMap[selected.config.type || ""];
+        const proxyFetch = getProviderFetch(selected);
         if (!proxyFetch) {
             return new Response("Channel type not supported", { status: 400 });
         }
@@ -303,7 +318,7 @@ const proxyWithFailover = async (
 
         for (let i = 0; i < attempts; i++) {
             const selected = prioritized[i];
-            const proxyFetch = providerMap[selected.config.type || ""];
+            const proxyFetch = getProviderFetch(selected);
             if (!proxyFetch) {
                 console.warn(`[Failover] Channel "${selected.key}" type "${selected.config.type}" not supported, skipping.`);
                 continue;
