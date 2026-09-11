@@ -111,7 +111,7 @@ QUOTA_EXHAUSTED_KEYWORDS = [
     "insufficient", "upgrade", "reach", "premium", "not enough"
 ]
 
-DEFAULT_MODEL = "gpt-5-mini"
+DEFAULT_MODEL = "gemini-3.1-flash-lite"
 
 class NoteGPTClient:
     """NoteGPT 官方免签协议客户端（支持动态凭证签发、额度探测、随机 UA 与自动换号无限续杯）"""
